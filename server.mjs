@@ -93,21 +93,21 @@ app.post('/api/completions', async (req, res) => {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
   try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          body: JSON.stringify({ 'model': 'gpt-3.5-turbo', 'messages': messageHistory }),
-          headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${OPENAI_API_KEY}`,
-          },
-      });
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      body: JSON.stringify({ 'model': 'gpt-3.5-turbo', 'messages': messageHistory }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      },
+    });
 
-      const jsonResponse = await response.json();
-      res.send(jsonResponse);
+    const jsonResponse = await response.json();
+    res.send(jsonResponse);
 
   } catch (error) {
-      console.error('Error with API call:', error);
-      res.status(500).send('Error with API call');
+    console.error('Error with API call:', error);
+    res.status(500).send('Error with API call');
   }
 });
 

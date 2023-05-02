@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>ChatGPT</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
@@ -9,12 +10,15 @@
             margin: 0;
             padding: 0;
         }
-        html, body {
+
+        html,
+        body {
             min-width: 320px;
             text-align: center;
             font-family: 'Roboto', sans-serif;
             background-color: #f0f0f0;
         }
+
         .wrapper {
             width: 100%;
             display: inline-flex;
@@ -23,6 +27,7 @@
             min-height: 100vh;
             padding: 20px;
         }
+
         .container {
             width: 90%;
             max-width: 600px;
@@ -32,6 +37,7 @@
             border-radius: 10px;
             position: relative;
         }
+
         #output {
             text-align: left;
             white-space: pre-wrap;
@@ -40,10 +46,12 @@
             border-radius: 5px;
             padding: 10px;
         }
+
         form {
             display: inline-block;
             width: 100%;
         }
+
         input[name="input"] {
             width: 95%;
             padding: 5px 10px;
@@ -51,7 +59,9 @@
             border: 1px solid #ccc;
             border-radius: 5px;
         }
-        input[type="submit"], button {
+
+        input[type="submit"],
+        button {
             width: 95%;
             padding: 5px 0;
             font-size: 14px;
@@ -62,9 +72,12 @@
             cursor: pointer;
             margin-top: 5px;
         }
-        input[type="submit"]:hover, button:hover {
+
+        input[type="submit"]:hover,
+        button:hover {
             background-color: #007acc;
         }
+
         select[name="systemMessage"] {
             width: 95%;
             padding: 5px 10px;
@@ -73,6 +86,7 @@
             border-radius: 5px;
             margin-top: 5px;
         }
+
         .product-container {
             display: flex;
             flex-direction: column;
@@ -81,7 +95,7 @@
             margin: 5px;
             background-color: #f0f0f0;
             border-radius: 10px;
-            box-shadow:  10px 10px 15px #d9d9d9, -10px -10px 15px #ffffff;
+            box-shadow: 10px 10px 15px #d9d9d9, -10px -10px 15px #ffffff;
             overflow: hidden;
             cursor: pointer;
             width: 200px;
@@ -113,7 +127,7 @@
         ];
 
         async function fetchProducts() {
-  const query = `
+            const query = `
     {
       products(first: 250, query: "status:active") {
         edges {
@@ -125,40 +139,40 @@
       }
     }
   `;
-    
-  try {
-    const response = await fetch('/shopify-api', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ query: query })
-    });
 
-    const jsonResponse = await response.json();
-    if (jsonResponse.data && jsonResponse.data.products) {
-        
-      return jsonResponse.data.products.edges.map(edge => {
-        const relevantTags = edge.node.tags.filter(tag => {
-          return !/^cf-size-/.test(tag) && !/^all/.test(tag) && !/^3053/.test(tag) && !/^dress/.test(tag) && !/^classic/.test(tag) && !/^childrens/.test(tag);
-        }).slice(0,5);
-        const top3Tags = edge.node.tags.slice(0, 3);
+            try {
+                const response = await fetch('/shopify-api', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query: query })
+                });
 
-        return {
-          title: edge.node.title,
-          tags: relevantTags,
-        };
-      });
-    }
-  } catch (error) {
-    console.error("Error fetching products:", error);
-  }
-  return [];
-}
+                const jsonResponse = await response.json();
+                if (jsonResponse.data && jsonResponse.data.products) {
 
-async function searchProductsByTitles(titles) {
-    const titleQueries = titles.map(title => `title:'${title.trim()}'`).join(" OR ");
-    const query = `
+                    return jsonResponse.data.products.edges.map(edge => {
+                        const relevantTags = edge.node.tags.filter(tag => {
+                            return !/^cf-size-/.test(tag) && !/^all/.test(tag) && !/^3053/.test(tag) && !/^dress/.test(tag) && !/^classic/.test(tag) && !/^childrens/.test(tag);
+                        }).slice(0, 5);
+                        const top3Tags = edge.node.tags.slice(0, 3);
+
+                        return {
+                            title: edge.node.title,
+                            tags: relevantTags,
+                        };
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching products:", error);
+            }
+            return [];
+        }
+
+        async function searchProductsByTitles(titles) {
+            const titleQueries = titles.map(title => `title:'${title.trim()}'`).join(" OR ");
+            const query = `
     {
         products(first: 5, query: "${titleQueries} AND status:active") {
             edges {
@@ -174,84 +188,84 @@ async function searchProductsByTitles(titles) {
         }
     }`;
 
-    try {
-        const response = await fetch('/shopify-api', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-  "titles": titles
-})
+            try {
+                const response = await fetch('/shopify-api', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "titles": titles
+                    })
 
-        });
+                });
 
-        const jsonResponse = await response.json();
-        if (jsonResponse.data && jsonResponse.data.products) {
-            return jsonResponse.data.products.edges.slice(0, 5).map(edge => {
-                return {
-                    id: edge.node.id,
-                    title: edge.node.title,
-                    handle: edge.node.handle,
-                    imageUrl: edge.node.featuredImage.transformedSrc
-                };
-            });
+                const jsonResponse = await response.json();
+                if (jsonResponse.data && jsonResponse.data.products) {
+                    return jsonResponse.data.products.edges.slice(0, 5).map(edge => {
+                        return {
+                            id: edge.node.id,
+                            title: edge.node.title,
+                            handle: edge.node.handle,
+                            imageUrl: edge.node.featuredImage.transformedSrc
+                        };
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching products:", error);
+            }
+            return [];
         }
-    } catch (error) {
-        console.error("Error fetching products:", error);
-    }
-    return [];
-}
 
 
 
 
 
-const userAction = async (event) => {
-    event.preventDefault();
-    const input = "" + document.forms["input"]["input"].value;
+        const userAction = async (event) => {
+            event.preventDefault();
+            const input = "" + document.forms["input"]["input"].value;
 
-    messageHistory.push({"role": "user", "content": input});
+            messageHistory.push({ "role": "user", "content": input });
 
-    // Disable input field and Send button while processing request
-    document.forms["input"]["input"].disabled = true;
-    document.forms["input"]["submit"].disabled = true;
+            // Disable input field and Send button while processing request
+            document.forms["input"]["input"].disabled = true;
+            document.forms["input"]["submit"].disabled = true;
 
-    const response = await fetch('/api/completions', {
-        method: "POST",
-        body: JSON.stringify({ messageHistory: messageHistory }),
-        headers: {
-            "content-type": "application/json",
-        },
-    });
+            const response = await fetch('/api/completions', {
+                method: "POST",
+                body: JSON.stringify({ messageHistory: messageHistory }),
+                headers: {
+                    "content-type": "application/json",
+                },
+            });
 
-    const jsonResponse = await response.json();
-    console.log(jsonResponse);
-    const aiReply = jsonResponse.choices[0].message.content;
-    console.log(messageHistory);
-    let message = "";
-let titles = [];
+            const jsonResponse = await response.json();
+            console.log(jsonResponse);
+            const aiReply = jsonResponse.choices[0].message.content;
+            console.log(messageHistory);
+            let message = "";
+            let titles = [];
 
-if (aiReply.includes("TITLES:")) {
-  const [messagePart, titlesPart] = aiReply.split("TITLES:");
-  message = messagePart.trim();
-  titles = titlesPart.trim().split(",");
-} else {
-  message = aiReply.trim();
-}
+            if (aiReply.includes("TITLES:")) {
+                const [messagePart, titlesPart] = aiReply.split("TITLES:");
+                message = messagePart.trim();
+                titles = titlesPart.trim().split(",");
+            } else {
+                message = aiReply.trim();
+            }
 
-if (titles.length > 0) {
-    const sanitizedTitles = titles.map(title => title.trim());
-    searchProductsByTitles(sanitizedTitles).then(product_links => {
-        const displayMessage = message;
+            if (titles.length > 0) {
+                const sanitizedTitles = titles.map(title => title.trim());
+                searchProductsByTitles(sanitizedTitles).then(product_links => {
+                    const displayMessage = message;
 
-        const AnswerLog = messageHistory.map((msg, index) => {
-            if (msg.role === "system") return "";
-            return `<br><br>${msg.role === 'user' ? 'ME' : 'AI'}: ${msg.content}`;
-        });
+                    const AnswerLog = messageHistory.map((msg, index) => {
+                        if (msg.role === "system") return "";
+                        return `<br><br>${msg.role === 'user' ? 'ME' : 'AI'}: ${msg.content}`;
+                    });
 
-        if (product_links.length > 0) {
-            const product_links_html = product_links.slice(0, 5).map(link => `
+                    if (product_links.length > 0) {
+                        const product_links_html = product_links.slice(0, 5).map(link => `
             <a href="https://taylorjoelle.com/products/${link.handle}" target="_blank" style="text-decoration: none; color: inherit;">
                 <div class="product-container">
                     <img src="${link.imageUrl}" alt="${link.title}">
@@ -259,60 +273,61 @@ if (titles.length > 0) {
                 </div>
             </a>
             `).join("");
-            message += "<br><br>" + product_links_html;
-        }
-        messageHistory.push({"role": "assistant", "content": displayMessage});
+                        message += "<br><br>" + product_links_html;
+                    }
+                    messageHistory.push({ "role": "assistant", "content": displayMessage });
 
-        document.forms["input"]["input"].value = "";
-        document.getElementById("output").innerHTML = AnswerLog.join("") + `<br><br>AI: ${message}`;
+                    document.forms["input"]["input"].value = "";
+                    document.getElementById("output").innerHTML = AnswerLog.join("") + `<br><br>AI: ${message}`;
 
-        // Re-enable input field and Send button after processing request
-        document.forms["input"]["input"].disabled = false;
-        document.forms["input"]["submit"].disabled = false;
-    }).catch((error) => {
-        console.error("Error displaying product links:", error);
-    });
-} else {
-    const AnswerLog = messageHistory.map((msg, index) => {
-        if (msg.role === "system") return "";
-        return `<br><br>${msg.role === 'user' ? 'ME' : 'AI'}: ${msg.content}`;
-    });
+                    // Re-enable input field and Send button after processing request
+                    document.forms["input"]["input"].disabled = false;
+                    document.forms["input"]["submit"].disabled = false;
+                }).catch((error) => {
+                    console.error("Error displaying product links:", error);
+                });
+            } else {
+                const AnswerLog = messageHistory.map((msg, index) => {
+                    if (msg.role === "system") return "";
+                    return `<br><br>${msg.role === 'user' ? 'ME' : 'AI'}: ${msg.content}`;
+                });
 
-    document.getElementById("output").innerHTML = AnswerLog.join("") + `<br><br>AI: ${message}`;
+                document.getElementById("output").innerHTML = AnswerLog.join("") + `<br><br>AI: ${message}`;
 
-    // Re-enable input field and Send button after processing request
-    document.forms["input"]["input"].disabled = false;
-    document.forms["input"]["submit"].disabled = false;
-}
-};
-
-
+                // Re-enable input field and Send button after processing request
+                document.forms["input"]["input"].disabled = false;
+                document.forms["input"]["submit"].disabled = false;
+            }
+        };
 
 
-const clearHistory = async () => {
-  const newSystemMessage = document.forms["systemMessageForm"]["systemMessage"].value;
 
-  // Fetch products
-  const products = await fetchProducts();
-  console.log(products);
-  // Create a string with product titles and tags
-  const productInfoString = products.map(product => `${product.title}: ${product.tags.join(', ')}`).join('\n');
 
-  // Add products to the system message
-  messageHistory = [
-    {
-      "role": "system",
-      "content": newSystemMessage + `\n\nProducts:\n${productInfoString}`
-    }
-  ];
-  document.getElementById("output").innerHTML = "";
-};
-        
+        const clearHistory = async () => {
+            const newSystemMessage = document.forms["systemMessageForm"]["systemMessage"].value;
+
+            // Fetch products
+            const products = await fetchProducts();
+            console.log(products);
+            // Create a string with product titles and tags
+            const productInfoString = products.map(product => `${product.title}: ${product.tags.join(', ')}`).join('\n');
+
+            // Add products to the system message
+            messageHistory = [
+                {
+                    "role": "system",
+                    "content": newSystemMessage + `\n\nProducts:\n${productInfoString}`
+                }
+            ];
+            document.getElementById("output").innerHTML = "";
+        };
+
     </script>
 </head>
+
 <body>
-    <div class = "wrapper">
-        <div class = "container">
+    <div class="wrapper">
+        <div class="container">
             <p id="output" style="white-space: pre-wrap;"></p>
             <form id="input" onsubmit="userAction(event)">
                 <input name="input" autofocus placeholder="User input" style="width: 95%;"><br>
@@ -330,13 +345,14 @@ const clearHistory = async () => {
                     3. Product Title 3
                     4. Product Title 4
                     5. Product Title 5">Shopping assistant</option>
-                    </select>
-                </form>
-                <form id="addOptionForm" style="margin-top: 5px;">
-                    <input name="customOption" placeholder="Add custom option" style="width: 95%;">
-                    <button type="button" onclick="addCustomOption()" style="margin-top: 5px;">Add Option</button>
-                </form>
-            </div>
+                </select>
+            </form>
+            <form id="addOptionForm" style="margin-top: 5px;">
+                <input name="customOption" placeholder="Add custom option" style="width: 95%;">
+                <button type="button" onclick="addCustomOption()" style="margin-top: 5px;">Add Option</button>
+            </form>
         </div>
-    </body>
+    </div>
+</body>
+
 </html>

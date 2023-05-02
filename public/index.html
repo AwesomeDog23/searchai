@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>ChatGPT</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
@@ -9,12 +10,15 @@
             margin: 0;
             padding: 0;
         }
-        html, body {
+
+        html,
+        body {
             min-width: 320px;
             text-align: center;
             font-family: 'Roboto', sans-serif;
             background-color: #f0f0f0;
         }
+
         .wrapper {
             width: 100%;
             display: inline-flex;
@@ -23,6 +27,7 @@
             min-height: 100vh;
             padding: 20px;
         }
+
         .container {
             width: 90%;
             max-width: 600px;
@@ -32,6 +37,7 @@
             border-radius: 10px;
             position: relative;
         }
+
         #output {
             text-align: left;
             white-space: pre-wrap;
@@ -40,10 +46,12 @@
             border-radius: 5px;
             padding: 10px;
         }
+
         form {
             display: inline-block;
             width: 100%;
         }
+
         input[name="input"] {
             width: 95%;
             padding: 5px 10px;
@@ -51,7 +59,9 @@
             border: 1px solid #ccc;
             border-radius: 5px;
         }
-        input[type="submit"], button {
+
+        input[type="submit"],
+        button {
             width: 95%;
             padding: 5px 0;
             font-size: 14px;
@@ -62,9 +72,12 @@
             cursor: pointer;
             margin-top: 5px;
         }
-        input[type="submit"]:hover, button:hover {
+
+        input[type="submit"]:hover,
+        button:hover {
             background-color: #007acc;
         }
+
         select[name="systemMessage"] {
             width: 95%;
             padding: 5px 10px;
@@ -73,6 +86,7 @@
             border-radius: 5px;
             margin-top: 5px;
         }
+
         .product-container {
             display: flex;
             flex-direction: column;
@@ -81,7 +95,7 @@
             margin: 5px;
             background-color: #f0f0f0;
             border-radius: 10px;
-            box-shadow:  10px 10px 15px #d9d9d9, -10px -10px 15px #ffffff;
+            box-shadow: 10px 10px 15px #d9d9d9, -10px -10px 15px #ffffff;
             overflow: hidden;
             cursor: pointer;
             width: 200px;
@@ -115,10 +129,10 @@
 
         async function searchProductsByTags(theme, style, color = "") {
             let combinedTags = `tag:'${theme}' AND tag:'${style}'`;
-    if (color) {
-        combinedTags += ` AND tag:'${color}'`;
-    }
-    const query = `
+            if (color) {
+                combinedTags += ` AND tag:'${color}'`;
+            }
+            const query = `
     {
         products(first: 5, query: "${combinedTags} AND status:active") {
             edges {
@@ -135,81 +149,81 @@
     }`;
 
 
-    try {
-        const response = await fetch('/shopify-api', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({query: query})
-        });
+            try {
+                const response = await fetch('/shopify-api', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query: query })
+                });
 
-        const jsonResponse = await response.json();
-        if (jsonResponse.data && jsonResponse.data.products) {
-            return jsonResponse.data.products.edges.slice(0, 5).map(edge => {
-                return {
-                    id: edge.node.id,
-                    title: edge.node.title,
-                    handle: edge.node.handle,
-                    imageUrl: edge.node.featuredImage.transformedSrc
-                };
-            });
+                const jsonResponse = await response.json();
+                if (jsonResponse.data && jsonResponse.data.products) {
+                    return jsonResponse.data.products.edges.slice(0, 5).map(edge => {
+                        return {
+                            id: edge.node.id,
+                            title: edge.node.title,
+                            handle: edge.node.handle,
+                            imageUrl: edge.node.featuredImage.transformedSrc
+                        };
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching products:", error);
+            }
+            return [];
         }
-    } catch (error) {
-        console.error("Error fetching products:", error);
-    }
-    return [];
-}
 
 
 
 
 
-const userAction = async (event) => {
-    event.preventDefault();
-    const input = "" + document.forms["input"]["input"].value;
-    
-    messageHistory.push({"role": "user", "content": input});
+        const userAction = async (event) => {
+            event.preventDefault();
+            const input = "" + document.forms["input"]["input"].value;
 
-    // Disable input field and Send button while processing request
-    document.forms["input"]["input"].disabled = true;
-    document.forms["input"]["submit"].disabled = true;
+            messageHistory.push({ "role": "user", "content": input });
 
-    const response = await fetch('/api/completions', {
-        method: "POST",
-        body: JSON.stringify({ messageHistory: messageHistory }),
-        headers: {
-            "content-type": "application/json",
-        },
-    });
+            // Disable input field and Send button while processing request
+            document.forms["input"]["input"].disabled = true;
+            document.forms["input"]["submit"].disabled = true;
 
-    const jsonResponse = await response.json();
-    console.log(jsonResponse);
-    const aiReply = jsonResponse.choices[0].message.content;
-    console.log(messageHistory);
-    let message = "";
-    let tags = [];
+            const response = await fetch('/api/completions', {
+                method: "POST",
+                body: JSON.stringify({ messageHistory: messageHistory }),
+                headers: {
+                    "content-type": "application/json",
+                },
+            });
 
-    if (aiReply.includes("TAGSTOSEARCH:")) {
-        const [messagePart, tagsPart] = aiReply.split("TAGSTOSEARCH:");
-        message = messagePart.trim();
-        tags = tagsPart.trim().split(",");
-    } else {
-        message = aiReply.trim();
-    }
+            const jsonResponse = await response.json();
+            console.log(jsonResponse);
+            const aiReply = jsonResponse.choices[0].message.content;
+            console.log(messageHistory);
+            let message = "";
+            let tags = [];
 
-    if (tags.length > 0) {
-    const [theme, style, color] = tags;
-    searchProductsByTags(theme, style, color).then(product_links => {
-        const displayMessage = message;
+            if (aiReply.includes("TAGSTOSEARCH:")) {
+                const [messagePart, tagsPart] = aiReply.split("TAGSTOSEARCH:");
+                message = messagePart.trim();
+                tags = tagsPart.trim().split(",");
+            } else {
+                message = aiReply.trim();
+            }
 
-        const AnswerLog = messageHistory.map((msg, index) => {
-            if (msg.role === "system") return "";
-            return `<br><br>${msg.role === 'user' ? 'ME' : 'AI'}: ${msg.content}`;
-        });
+            if (tags.length > 0) {
+                const [theme, style, color] = tags;
+                searchProductsByTags(theme, style, color).then(product_links => {
+                    const displayMessage = message;
 
-        if (product_links.length > 0) {
-            const product_links_html = product_links.slice(0, 5).map(link => `
+                    const AnswerLog = messageHistory.map((msg, index) => {
+                        if (msg.role === "system") return "";
+                        return `<br><br>${msg.role === 'user' ? 'ME' : 'AI'}: ${msg.content}`;
+                    });
+
+                    if (product_links.length > 0) {
+                        const product_links_html = product_links.slice(0, 5).map(link => `
             <a href="https://taylorjoelle.com/products/${link.handle}" target="_blank" style="text-decoration: none; color: inherit;">
                 <div class="product-container">
                     <img src="${link.imageUrl}" alt="${link.title}">
@@ -217,32 +231,32 @@ const userAction = async (event) => {
                 </div>
             </a>
             `).join("");
-            message += "<br><br>" + product_links_html;
-        }
-        messageHistory.push({"role": "assistant", "content": displayMessage});
+                        message += "<br><br>" + product_links_html;
+                    }
+                    messageHistory.push({ "role": "assistant", "content": displayMessage });
 
-        document.forms["input"]["input"].value = "";
-        document.getElementById("output").innerHTML = AnswerLog.join("") + `<br><br>AI: ${message}`;
+                    document.forms["input"]["input"].value = "";
+                    document.getElementById("output").innerHTML = AnswerLog.join("") + `<br><br>AI: ${message}`;
 
-        // Re-enable input field and Send button after processing request
-        document.forms["input"]["input"].disabled = false;
-        document.forms["input"]["submit"].disabled = false;
-    }).catch((error) => {
-        console.error("Error displaying product links:", error);
-    });
-} else {
-    messageHistory.push({"role": "assistant", "content": aiReply});
+                    // Re-enable input field and Send button after processing request
+                    document.forms["input"]["input"].disabled = false;
+                    document.forms["input"]["submit"].disabled = false;
+                }).catch((error) => {
+                    console.error("Error displaying product links:", error);
+                });
+            } else {
+                messageHistory.push({ "role": "assistant", "content": aiReply });
 
-    const AnswerLog = messageHistory.map((msg, index) => {
-        if (msg.role === "system") return "";
-        return `<br><br>${msg.role === 'user' ? 'ME' : 'AI'}: ${msg.content}`;
-    });
+                const AnswerLog = messageHistory.map((msg, index) => {
+                    if (msg.role === "system") return "";
+                    return `<br><br>${msg.role === 'user' ? 'ME' : 'AI'}: ${msg.content}`;
+                });
 
-        // Re-enable input field and Send button after processing request
-        document.forms["input"]["input"].disabled = false;
-        document.forms["input"]["submit"].disabled = false;
-    }
-};
+                // Re-enable input field and Send button after processing request
+                document.forms["input"]["input"].disabled = false;
+                document.forms["input"]["submit"].disabled = false;
+            }
+        };
 
 
 
@@ -272,9 +286,10 @@ const userAction = async (event) => {
         }
     </script>
 </head>
+
 <body>
-    <div class = "wrapper">
-        <div class = "container">
+    <div class="wrapper">
+        <div class="container">
             <p id="output" style="white-space: pre-wrap;"></p>
             <form id="input" onsubmit="userAction(event)">
                 <input name="input" autofocus placeholder="User input" style="width: 95%;"><br>
@@ -288,13 +303,14 @@ const userAction = async (event) => {
                     Your message to the customer.
                     TAGSTOSEARCH:
                     theme,style,color">Shopping assistant</option>
-                    </select>
-                </form>
-                <form id="addOptionForm" style="margin-top: 5px;">
-                    <input name="customOption" placeholder="Add custom option" style="width: 95%;">
-                    <button type="button" onclick="addCustomOption()" style="margin-top: 5px;">Add Option</button>
-                </form>
-            </div>
+                </select>
+            </form>
+            <form id="addOptionForm" style="margin-top: 5px;">
+                <input name="customOption" placeholder="Add custom option" style="width: 95%;">
+                <button type="button" onclick="addCustomOption()" style="margin-top: 5px;">Add Option</button>
+            </form>
         </div>
-    </body>
+    </div>
+</body>
+
 </html>
