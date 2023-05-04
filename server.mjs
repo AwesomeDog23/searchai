@@ -57,7 +57,8 @@ async function fetchProducts() {
     });
 
     const jsonResponse = await response.json();
-
+    console.log(jsonResponse);
+    
     const categorizedProducts = {};
 
     jsonResponse.forEach(product => {

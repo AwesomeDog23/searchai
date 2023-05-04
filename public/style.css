@@ -1,0 +1,112 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    min-width: 320px;
+    text-align: center;
+    font-family: 'Roboto', sans-serif;
+    background-color: #f0f0f0;
+}
+
+.wrapper {
+    width: 100%;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    width: 90%;
+    max-width: 600px;
+    padding: 30px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    position: relative;
+}
+
+#output {
+    text-align: left;
+    white-space: pre-wrap;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+form {
+    display: inline-block;
+    width: 100%;
+}
+
+input[name="input"] {
+    width: 95%;
+    padding: 5px 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+input[type="submit"],
+button {
+    width: 95%;
+    padding: 5px 0;
+    font-size: 14px;
+    background-color: #0099ff;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 5px;
+}
+
+input[type="submit"]:hover,
+button:hover {
+    background-color: #007acc;
+}
+
+select[name="systemMessage"] {
+    width: 95%;
+    padding: 5px 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-top: 5px;
+}
+
+.product-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 5px;
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    box-shadow: 10px 10px 15px #d9d9d9, -10px -10px 15px #ffffff;
+    overflow: hidden;
+    cursor: pointer;
+    width: 200px;
+    height: 200px;
+}
+
+.product-container img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    transition: all 0.3s;
+}
+
+.product-container:hover img {
+    transform: scale(1.05);
+}
+
+.product-title {
+    padding: 5px;
+    font-size: 14px;
+}
