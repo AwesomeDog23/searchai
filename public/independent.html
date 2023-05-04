@@ -127,48 +127,41 @@
         ];
 
         async function fetchProducts() {
-            const query = `
-    {
-      products(first: 250, query: "status:active") {
-        edges {
-          node {
-            title
-            tags
-          }
-        }
-      }
-    }
-  `;
-
             try {
-                const response = await fetch('/shopify-api', {
-                    method: 'POST',
+                const response = await fetch('/shopify-products', {
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ query: query })
+                    }
                 });
 
                 const jsonResponse = await response.json();
-                if (jsonResponse.data && jsonResponse.data.products) {
 
-                    return jsonResponse.data.products.edges.map(edge => {
-                        const relevantTags = edge.node.tags.filter(tag => {
-                            return !/^cf-size-/.test(tag) && !/^all/.test(tag) && !/^3053/.test(tag) && !/^dress/.test(tag) && !/^classic/.test(tag) && !/^childrens/.test(tag);
-                        }).slice(0, 5);
-                        const top3Tags = edge.node.tags.slice(0, 3);
+                let categories = {};
 
-                        return {
-                            title: edge.node.title,
+                jsonResponse.forEach(product => {
+                    const relevantTags = product.tags.filter(tag => {
+                        return !/^cf-size-/.test(tag) && !/^all/.test(tag) && !/^3053/.test(tag) && !/^dress/.test(tag) && !/^classic/.test(tag) && !/^childrens/.test(tag);
+                    }).slice(0, 5);
+
+                    relevantTags.forEach(tag => {
+                        if (!categories[tag]) {
+                            categories[tag] = [];
+                        }
+                        categories[tag].push({
+                            title: product.title,
                             tags: relevantTags,
-                        };
+                        });
                     });
-                }
+                });
+
+                return categories;
             } catch (error) {
                 console.error("Error fetching products:", error);
+                return {};
             }
-            return [];
         }
+
 
         async function searchProductsByTitles(titles) {
             const titleQueries = titles.map(title => `title:'${title.trim()}'`).join(" OR ");

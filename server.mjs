@@ -39,53 +39,75 @@ app.get('/independent.html', async (req, res) => {
 app.get('/shopify-products', async (req, res) => {
   try {
     const products = await getAllProducts();
-    res.json(products);
+    const categorizedProducts = categorizeProducts(products);
+    console.log('sorted',categorizeProducts);
+    res.json(categorizedProducts);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-async function getAllProducts() {
-  const url = `https://${SHOP_NAME}.myshopify.com/admin/api/2023-01/graphql.json`;
-
-  const query = `
-    {
-      products(first: 10) {
-        edges {
-          node {
-            id
-            title
-            handle
-            image {
-              transformedSrc
-            }
-          }
-        }
-      }
-    }
-  `;
-
-  const headers = {
-    'Content-Type': 'application/json',
-    'X-Shopify-Access-Token': ACCESS_TOKEN,
-    'Authorization': 'Basic ' + Buffer.from(API_KEY + ':' + PASSWORD).toString('base64'),
-  };
-
+async function fetchProducts() {
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify({ query }),
+    const response = await fetch('/shopify-products', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
 
     const jsonResponse = await response.json();
-    const products = jsonResponse.data.products.edges.map(edge => edge.node);
-    return products;
+
+    const categorizedProducts = {};
+
+    jsonResponse.forEach(product => {
+      const relevantTags = product.tags.filter(tag => {
+        return !/^cf-size-/.test(tag) && !/^all/.test(tag) && !/^3053/.test(tag) && !/^dress/.test(tag) && !/^classic/.test(tag) && !/^childrens/.test(tag);
+      }).slice(0, 5);
+
+      relevantTags.forEach(tag => {
+        if (!categorizedProducts[tag]) {
+          categorizedProducts[tag] = [];
+        }
+
+        // Check if the product is already in the category
+        const productExists = categorizedProducts[tag].some(existingProduct => existingProduct.title === product.title);
+
+        if (!productExists) {
+          categorizedProducts[tag].push({
+            title: product.title,
+            tags: relevantTags,
+          });
+        }
+      });
+    });
+
+    return categorizedProducts;
   } catch (error) {
     console.error("Error fetching products:", error);
     return [];
   }
 }
+
+
+function categorizeProducts(products) {
+  const categories = {};
+
+  products.forEach(product => {
+    product.tags.forEach(tag => {
+      tag = tag.toLowerCase();
+
+      if (!categories[tag]) {
+        categories[tag] = [];
+      }
+
+      categories[tag].push(product);
+    });
+  });
+
+  return categories;
+}
+
 
 
 app.post('/api/completions', async (req, res) => {
