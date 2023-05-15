@@ -173,11 +173,12 @@ app.get("/products", (req, res) => {
     results.sort((a, b) => b.measure - a.measure);
     const topResults = results.slice(0, 5).map((result) => allProducts[result.index]);
 
-    res.render("search", { products: topResults, query: req.query.query });
+    res.json({ products: topResults, query: req.query.query }); // use res.json() instead of res.render()
   } else {
-    res.render("search", { products: allProducts });
+    res.json({ products: allProducts }); // use res.json() here too
   }
 });
+
 
 app.get("/", (req, res) => {
   res.render("search");

@@ -6,26 +6,23 @@ let messageHistory = [
     },
 ];
 
-async function searchProductsByTags(theme, style, color = "") {
-    let combinedTags = `tag:'${theme}' AND tag:'${style}'`;
-    if (color) {
-        combinedTags += ` AND tag:'${color}'`;
-    }
+async function fetchProductDetailsByHandle(handle) {
     const query = `
-  {
-  products(first: 5, query: "${combinedTags} AND status:active") {
-      edges {
-          node {
-              id
-              title
-              handle
-              featuredImage {
-                  transformedSrc(maxWidth: 100, maxHeight: 100, crop: CENTER)
+        {
+          productByHandle(handle: "${handle}") {
+            id
+            title
+            handle
+            images(first: 1) {
+              edges {
+                node {
+                  transformedSrc
+                }
               }
+            }
           }
-      }
-  }
-  }`;
+        }
+    `;
 
     try {
         const response = await fetch("/shopify-api", {
@@ -33,21 +30,49 @@ async function searchProductsByTags(theme, style, color = "") {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ query: query }),
+            body: JSON.stringify({ query }),
         });
 
         const jsonResponse = await response.json();
-        if (jsonResponse.data && jsonResponse.data.products) {
-            return jsonResponse.data.products.edges
+
+        if (
+            jsonResponse &&
+            jsonResponse.data &&
+            jsonResponse.data.productByHandle
+        ) {
+            const product = jsonResponse.data.productByHandle;
+            return {
+                id: product.id,
+                title: product.title,
+                handle: product.handle,
+                imageUrl: product.images.edges[0]?.node.transformedSrc,
+            };
+        }
+    } catch (error) {
+        console.error("Error fetching product details:", error);
+    }
+
+    return null;
+}
+
+async function searchProductsByTags(query = "") {
+    try {
+        const response = await fetch(`/products?query=${query}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        });
+
+        const jsonResponse = await response.json();
+        console.log(jsonResponse);
+        if (jsonResponse && jsonResponse.products) {
+            const productPromises = jsonResponse.products
                 .slice(0, 5)
-                .map((edge) => {
-                    return {
-                        id: edge.node.id,
-                        title: edge.node.title,
-                        handle: edge.node.handle,
-                        imageUrl: edge.node.featuredImage.transformedSrc,
-                    };
-                });
+                .map((product) => fetchProductDetailsByHandle(product.handle));
+
+            // Await the promises and return the resulting array of products
+            return await Promise.all(productPromises);
         }
     } catch (error) {
         console.error("Error fetching products:", error);
@@ -74,23 +99,21 @@ const userAction = async (event) => {
     });
 
     const jsonResponse = await response.json();
-    console.log(jsonResponse);
     const aiReply = jsonResponse.choices[0].message.content;
-    console.log(messageHistory);
-    let message = "";
-    let tags = [];
 
-    if (aiReply.includes("TAGSTOSEARCH:")) {
-        const [messagePart, tagsPart] = aiReply.split("TAGSTOSEARCH:");
+    let message = "";
+    let query = "";
+
+    if (aiReply.includes("QUERY:")) {
+        const [messagePart, queryPart] = aiReply.split("QUERY:");
         message = messagePart.trim();
-        tags = tagsPart.trim().split(",");
+        query = queryPart.trim();
     } else {
-        message = aiReply.trim();
+        message = aiReply;
     }
 
-    if (tags.length > 0) {
-        const [theme, style, color] = tags;
-        searchProductsByTags(theme, style, color)
+    if (query.length > 0) {
+        searchProductsByTags(query)
             .then((product_links) => {
                 const displayMessage = message;
 
