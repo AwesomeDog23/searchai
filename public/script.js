@@ -13,6 +13,7 @@ async function fetchProductDetailsByHandle(handle) {
             id
             title
             handle
+            tags
             images(first: 1) {
               edges {
                 node {
@@ -46,6 +47,7 @@ async function fetchProductDetailsByHandle(handle) {
                 title: product.title,
                 handle: product.handle,
                 imageUrl: product.images.edges[0]?.node.transformedSrc,
+                tags: product.tags,
             };
         }
     } catch (error) {
@@ -80,9 +82,43 @@ async function searchProductsByTags(query = "") {
     return [];
 }
 
+const pickProducts = async (input, query) => {
+    try {
+        const result = await searchProductsByTags(query);
+        console.log(result);
+
+        const products = result;  // Access the products array from the result
+
+        // construct a string of product details
+        const productDetails = products.map(p => `title: ${p.handle} - tags: ${p.tags.join(', ')}`).join(' | ');
+
+        const queryMessage = [{
+            role: "system",
+            content: `pick 5 products from this list only saying the title in the exact same format seperated by commas - ${productDetails} that fits this request best: ${input}`
+        }];
+
+        console.log(queryMessage);
+
+        const response = await fetch("/api/completions", {
+            method: "POST",
+            body: JSON.stringify({ messageHistory: queryMessage }),
+            headers: {
+                "content-type": "application/json",
+            },
+        });
+        const data = await response.json();
+        console.log(data);
+    } catch (error) {
+        console.error(`Error: ${error}`);
+    }
+}
+
+
 const userAction = async (event) => {
     event.preventDefault();
     const input = "" + document.forms["input"]["input"].value;
+
+
 
     messageHistory.push({ role: "user", content: input });
 
@@ -112,59 +148,50 @@ const userAction = async (event) => {
         message = aiReply;
     }
 
+    let product_links_html = "";
+
     if (query.length > 0) {
-        searchProductsByTags(query)
-            .then((product_links) => {
-                const displayMessage = message;
-
-                const AnswerLog = messageHistory.map((msg, index) => {
-                    if (msg.role === "system") return "";
-                    return `<br><br>${msg.role === "user" ? "ME" : "AI"
-                        }: ${msg.content}`;
-                });
-
-                if (product_links.length > 0) {
-                    const product_links_html = product_links
-                        .slice(0, 5)
-                        .map(
-                            (link) => `
-      <a href="https://taylorjoelle.com/products/${link.handle}" target="_blank" style="text-decoration: none; color: inherit;">
-          <div class="product-container">
-              <img src="${link.imageUrl}" alt="${link.title}">
-              <div class="product-title">${link.title}</div>
-          </div>
-      </a>
-      `
-                        )
-                        .join("");
-                    message += "<br><br>" + product_links_html;
-                }
-                messageHistory.push({ role: "assistant", content: displayMessage });
-
-                document.forms["input"]["input"].value = "";
-                document.getElementById("output").innerHTML =
-                    AnswerLog.join("") + `<br><br>AI: ${message}`;
-
-                // Re-enable input field and Send button after processing request
-                document.forms["input"]["input"].disabled = false;
-                document.forms["input"]["submit"].disabled = false;
-            })
-            .catch((error) => {
-                console.error("Error displaying product links:", error);
-            });
-    } else {
-        messageHistory.push({ role: "assistant", content: aiReply });
-
-        const AnswerLog = messageHistory.map((msg, index) => {
-            if (msg.role === "system") return "";
-            return `<br><br>${msg.role === "user" ? "ME" : "AI"}: ${msg.content}`;
-        });
-
-        // Re-enable input field and Send button after processing request
-        document.forms["input"]["input"].disabled = false;
-        document.forms["input"]["submit"].disabled = false;
+        try {
+            const product_links = pickProducts(input, query);
+            if (product_links.length > 0) {
+                product_links_html = product_links
+                    .slice(0, 5)
+                    .map(
+                        (link) => `
+                <a href="https://taylorjoelle.com/products/${link.handle}" target="_blank" style="text-decoration: none; color: inherit;">
+                    <div class="product-container">
+                        <img src="${link.imageUrl}" alt="${link.title}">
+                        <div class="product-title">${link.title}</div>
+                    </div>
+                </a>
+                `
+                    )
+                    .join("");
+            }
+        } catch (error) {
+            console.error("Error displaying product links:", error);
+        }
     }
+
+    // Always add the assistant's message to the message history
+    messageHistory.push({ role: "assistant", content: message });
+    console.log(messageHistory);
+
+    const AnswerLog = messageHistory.map((msg, index) => {
+        if (msg.role === "system") return "";
+        return `<br><br>${msg.role === "user" ? "ME" : "AI"}: ${msg.content}`;
+    });
+
+    document.getElementById("output").innerHTML =
+        AnswerLog.join("") + (product_links_html ? `<br><br>${product_links_html}` : "");
+
+    // Re-enable input field and Send button after processing request
+    document.forms["input"]["input"].disabled = false;
+    document.forms["input"]["submit"].disabled = false;
 };
+
+
+
 
 const clearHistory = () => {
     const newSystemMessage = document.forms["systemMessageForm"]["systemMessage"].value;

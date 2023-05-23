@@ -2,6 +2,7 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    transition: all 0.3s linear;
 }
 
 html,
@@ -9,7 +10,7 @@ body {
     min-width: 320px;
     text-align: center;
     font-family: 'Roboto', sans-serif;
-    background-color: #f0f0f0;
+    background-color: #e0e0e0; /* Lighter background for neumorphic effect */
 }
 
 .wrapper {
@@ -25,8 +26,8 @@ body {
     width: 90%;
     max-width: 600px;
     padding: 30px;
-    background-color: #ffffff;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background-color: #e0e0e0; /* Same color as the background */
+    box-shadow: -10px -10px 20px #ffffff, 10px 10px 20px #b0b0b0; /* Soft shadows for neumorphic effect */
     border-radius: 10px;
     position: relative;
 }
@@ -45,39 +46,22 @@ form {
     width: 100%;
 }
 
-input[name="input"] {
-    width: 95%;
-    padding: 5px 10px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
+input[name="input"],
 input[type="submit"],
-button {
-    width: 95%;
-    padding: 5px 0;
-    font-size: 14px;
-    background-color: #0099ff;
-    color: #ffffff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 5px;
-}
-
-input[type="submit"]:hover,
-button:hover {
-    background-color: #007acc;
-}
-
+button,
 select[name="systemMessage"] {
     width: 95%;
     padding: 5px 10px;
     font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    margin-top: 5px;
+    border: none; /* Remove border */
+    border-radius: 15px; /* Increase border radius */
+    background-color: #e0e0e0; /* Same color as the background */
+    box-shadow: -5px -5px 10px #ffffff, 5px 5px 10px #b0b0b0; /* Soft shadows for neumorphic effect */
+}
+
+input[type="submit"]:hover,
+button:hover {
+    background-color: #d0d0d0; /* Darker color on hover */
 }
 
 .product-container {
@@ -86,13 +70,17 @@ select[name="systemMessage"] {
     justify-content: center;
     align-items: center;
     margin: 5px;
-    background-color: #f0f0f0;
-    border-radius: 10px;
-    box-shadow: 10px 10px 15px #d9d9d9, -10px -10px 15px #ffffff;
+    background-color: #e0e0e0; /* Same color as the background */
+    border-radius: 20px; /* Increase border radius */
+    box-shadow: -10px -10px 20px #ffffff, 10px 10px 20px #b0b0b0; /* Soft shadows for neumorphic effect */
     overflow: hidden;
     cursor: pointer;
     width: 200px;
     height: 200px;
+}
+
+.product-container:hover {
+    box-shadow: -2px -2px 5px #ffffff, 2px 2px 5px #b0b0b0; /* Reduced shadow size on hover */
 }
 
 .product-container img {
@@ -103,10 +91,13 @@ select[name="systemMessage"] {
 }
 
 .product-container:hover img {
-    transform: scale(1.05);
+    transform: scale(1.1); /* Increase image size on hover */
 }
 
-.product-title {
-    padding: 5px;
-    font-size: 14px;
+.product-container h2,
+.product-container h3 {
+    margin: 10px;
+    color: #333; /* Darker text color for contrast */
+    text-shadow: 1px 1px 1px #ffffff; /* Light text shadow for depth */
 }
+

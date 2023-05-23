@@ -171,14 +171,23 @@ app.get("/products", (req, res) => {
     });
 
     results.sort((a, b) => b.measure - a.measure);
-    const topResults = results.slice(0, 5).map((result) => allProducts[result.index]);
+    const topResults = results.slice(0, 10).map((result) => {
+      const product = allProducts[result.index];
+      // filter out tags that start with "cf" and slice to the first 10
+      product.tags = product.tags.filter(tag => !tag.startsWith('cf')).slice(0, 10);
+      return product;
+    });
 
     res.json({ products: topResults, query: req.query.query }); // use res.json() instead of res.render()
   } else {
-    res.json({ products: allProducts }); // use res.json() here too
+    const products = allProducts.map(product => {
+      // filter out tags that start with "cf" and slice to the first 10
+      product.tags = product.tags.filter(tag => !tag.startsWith('cf')).slice(0, 10);
+      return product;
+    });
+    res.json({ products }); // use res.json() here too
   }
 });
-
 
 app.get("/", (req, res) => {
   res.render("search");
