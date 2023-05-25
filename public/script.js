@@ -67,10 +67,10 @@ async function searchProductsByTags(query = "") {
         });
 
         const jsonResponse = await response.json();
-        console.log(jsonResponse);
+
         if (jsonResponse && jsonResponse.products) {
             const productPromises = jsonResponse.products
-                .slice(0, 5)
+                .slice(0, 10)
                 .map((product) => fetchProductDetailsByHandle(product.handle));
 
             // Await the promises and return the resulting array of products
@@ -85,19 +85,15 @@ async function searchProductsByTags(query = "") {
 const pickProducts = async (input, query) => {
     try {
         const result = await searchProductsByTags(query);
-        console.log(result);
-
-        const products = result;  // Access the products array from the result
-
+        const products = await result;
+        console.log(products);
         // construct a string of product details
         const productDetails = products.map(p => `title: ${p.handle} - tags: ${p.tags.join(', ')}`).join(' | ');
-
+        console.log(productDetails);
         const queryMessage = [{
             role: "system",
-            content: `pick 5 products from this list only saying the title in the exact same format seperated by commas - ${productDetails} that fits this request best: ${input}`
+            content: `pick at most 5 products but never more than 5 from this list keeping in mind the titles and the tags when choosing, only saying the title in the exact same format seperated by commas, and include the dashes:\n - ${productDetails}\n that fits this request best based on the tags and titles of each item: ${input}\n Dont include any periods or say anything other than just the list of items. Also do not include the request, only the list of items.`
         }];
-
-        console.log(queryMessage);
 
         const response = await fetch("/api/completions", {
             method: "POST",
@@ -107,7 +103,23 @@ const pickProducts = async (input, query) => {
             },
         });
         const data = await response.json();
-        console.log(data);
+        const content = data.choices[0].message.content
+        console.log(content);
+
+        // Assuming the response is in the form of a string of product titles separated by commas
+        // Convert the string into an array
+        const productArray = content.split(', ');
+
+        // Construct an array of objects that contain the required information for each selected product
+        const selectedProducts = products.filter(p => productArray.includes(p.handle)).map(p => {
+            return {
+                title: p.title,
+                imageUrl: p.imageUrl,
+                handle: p.handle
+            };
+        });
+        return selectedProducts;
+
     } catch (error) {
         console.error(`Error: ${error}`);
     }
@@ -116,13 +128,10 @@ const pickProducts = async (input, query) => {
 
 const userAction = async (event) => {
     event.preventDefault();
-    const input = "" + document.forms["input"]["input"].value;
-
-
+    const input = document.forms["input"]["input"].value;
 
     messageHistory.push({ role: "user", content: input });
 
-    // Disable input field and Send button while processing request
     document.forms["input"]["input"].disabled = true;
     document.forms["input"]["submit"].disabled = true;
 
@@ -137,35 +146,31 @@ const userAction = async (event) => {
     const jsonResponse = await response.json();
     const aiReply = jsonResponse.choices[0].message.content;
 
-    let message = "";
+    let message = aiReply;
     let query = "";
-
+    console.log(aiReply);
     if (aiReply.includes("QUERY:")) {
-        const [messagePart, queryPart] = aiReply.split("QUERY:");
-        message = messagePart.trim();
-        query = queryPart.trim();
-    } else {
-        message = aiReply;
+        [message, query] = aiReply.split("QUERY:").map((str) => str.trim());
     }
 
     let product_links_html = "";
 
     if (query.length > 0) {
         try {
-            const product_links = pickProducts(input, query);
+            const product_links = await pickProducts(input, query);
             if (product_links.length > 0) {
                 product_links_html = product_links
                     .slice(0, 5)
-                    .map(
-                        (link) => `
-                <a href="https://taylorjoelle.com/products/${link.handle}" target="_blank" style="text-decoration: none; color: inherit;">
-                    <div class="product-container">
-                        <img src="${link.imageUrl}" alt="${link.title}">
-                        <div class="product-title">${link.title}</div>
-                    </div>
-                </a>
-                `
-                    )
+                    .map((link) => {
+                        return `
+                        <a href="https://taylorjoelle.com/products/${link.handle}" target="_blank" style="text-decoration: none; color: inherit;">
+                            <div class="product-container">
+                                <img src="${link.imageUrl}" alt="${link.title}">
+                                <div class="product-title">${link.title}</div>
+                            </div>
+                        </a>
+                    `;
+                    })
                     .join("");
             }
         } catch (error) {
@@ -173,25 +178,18 @@ const userAction = async (event) => {
         }
     }
 
-    // Always add the assistant's message to the message history
     messageHistory.push({ role: "assistant", content: message });
-    console.log(messageHistory);
 
-    const AnswerLog = messageHistory.map((msg, index) => {
-        if (msg.role === "system") return "";
-        return `<br><br>${msg.role === "user" ? "ME" : "AI"}: ${msg.content}`;
-    });
+    const AnswerLog = messageHistory
+        .filter((msg) => msg.role !== "system")
+        .map((msg) => `<br><br>${msg.role === "user" ? "ME" : "AI"}: ${msg.content}`);
 
     document.getElementById("output").innerHTML =
         AnswerLog.join("") + (product_links_html ? `<br><br>${product_links_html}` : "");
 
-    // Re-enable input field and Send button after processing request
     document.forms["input"]["input"].disabled = false;
     document.forms["input"]["submit"].disabled = false;
 };
-
-
-
 
 const clearHistory = () => {
     const newSystemMessage = document.forms["systemMessageForm"]["systemMessage"].value;

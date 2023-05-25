@@ -1,0 +1,6 @@
+PORT=port
+SHOP_NAME=shopify-shop-name
+ACCESS_TOKEN=shopify-access-token
+API_KEY=shopify-app-api-key
+PASSWORD=shopify-app-secret-key
+OPENAI_API_KEY=openai-api-key

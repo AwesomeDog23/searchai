@@ -93,20 +93,6 @@ const fetchProducts = async () => {
 
 fetchProducts();
 
-import { readFile } from "fs/promises";
-
-app.get("/independent.html", async (req, res) => {
-  try {
-    const fileContent = await readFile(
-      join(__dirname, "public", "independent.html"),
-      "utf8"
-    );
-    res.send(fileContent);
-  } catch (error) {
-    res.status(500).send("Error: Cannot find the independent.html file");
-  }
-});
-
 app.post("/api/completions", async (req, res) => {
   const messageHistory = req.body.messageHistory;
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
