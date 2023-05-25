@@ -88,11 +88,22 @@ const pickProducts = async (input, query) => {
         const products = await result;
         console.log(products);
         // construct a string of product details
-        const productDetails = products.map(p => `title: ${p.handle} - tags: ${p.tags.join(', ')}`).join(' | ');
+        const productDetails = products.map(p => `Title: ${p.handle} - Tags: ${p.tags.join(', ')}`).join(' | ');
         console.log(productDetails);
         const queryMessage = [{
             role: "system",
-            content: `pick at most 5 products but never more than 5 from this list keeping in mind the titles and the tags when choosing, only saying the title in the exact same format seperated by commas, and include the dashes:\n - ${productDetails}\n that fits this request best based on the tags and titles of each item: ${input}\n Dont include any periods or say anything other than just the list of items. Also do not include the request, only the list of items.`
+            content: `Please pick at most 5 products from this list that fit the following criteria: 
+- The product name must match the exact format provided in the list of products, separated by commas and including the dashes in the title.
+- If the product has tags that match the user's message in meaning or exact text, it should always be included in the response above any items that do not have them, for example if the item has a tag that says pink at all in it, and the user asked for a pink dress it should be included.
+- The product should have a title that relates to the keywords in the user's message.
+
+List of products: ${productDetails}
+
+User's messages: ${input}
+
+Please do not include any periods or any other text besides the list of products. Also, do not include the original request in your response.
+Example response: pink-dress, green-dress, blue-dress
+`
         }];
 
         const response = await fetch("/api/completions", {
@@ -102,6 +113,7 @@ const pickProducts = async (input, query) => {
                 "content-type": "application/json",
             },
         });
+        console.log(response);
         const data = await response.json();
         const content = data.choices[0].message.content
         console.log(content);
@@ -129,6 +141,10 @@ const pickProducts = async (input, query) => {
 const userAction = async (event) => {
     event.preventDefault();
     const input = document.forms["input"]["input"].value;
+    const aiInput = messageHistory
+        .filter((msg) => msg.role === "user")
+        .map((msg) => msg.content)
+        .join(" ");
 
     messageHistory.push({ role: "user", content: input });
 
@@ -157,7 +173,7 @@ const userAction = async (event) => {
 
     if (query.length > 0) {
         try {
-            const product_links = await pickProducts(input, query);
+            const product_links = await pickProducts(aiInput, query);
             if (product_links.length > 0) {
                 product_links_html = product_links
                     .slice(0, 5)

@@ -103,6 +103,7 @@ app.post("/api/completions", async (req, res) => {
       body: JSON.stringify({
         model: "gpt-3.5-turbo",
         messages: messageHistory,
+        temperature: 0.3,
       }),
       headers: {
         "Content-Type": "application/json",
