@@ -12,7 +12,6 @@ const TfIdf = natural.TfIdf;
 const tfidf = new TfIdf();
 
 const PORT = process.env.PORT;
-const mongodbUri = process.env.MONGODB_URI;
 
 const SHOP_NAME = process.env.SHOP_NAME;
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
@@ -103,7 +102,6 @@ app.post("/api/completions", async (req, res) => {
       body: JSON.stringify({
         model: "gpt-3.5-turbo",
         messages: messageHistory,
-        temperature: 0.3,
       }),
       headers: {
         "Content-Type": "application/json",

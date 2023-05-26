@@ -92,10 +92,9 @@ const pickProducts = async (input, query) => {
         console.log(productDetails);
         const queryMessage = [{
             role: "system",
-            content: `Please pick at most 5 products from this list that fit the following criteria: 
-- The product name must match the exact format provided in the list of products, separated by commas and including the dashes in the title.
-- If the product has tags that match the user's message in meaning or exact text, it should always be included in the response above any items that do not have them, for example if the item has a tag that says pink at all in it, and the user asked for a pink dress it should be included.
-- The product should have a title that relates to the keywords in the user's message.
+            content: `As a shopping assistant, your task is to select up to 5 products from the list provided that best match the user's requests. The tags associated with each product are the most important factor in your selection process, so be sure to choose items that match the user's request exactly or have similar meanings. The product title is the second most important factor, so if the user requests a specific title, be sure to include that one. For example, if the user asks for a pink dress, select any dress with "pink" in the title or in any tags over any other dress that doesn't match. If you miss any items with "pink" in the title or tags, you will be penalized, so always include them. If a color is specified, only select dresses that include that color and never select one that doesn't. Each item is separated by a "|", so keep that in mind when analyzing the tags.
+
+However, there seems to be an issue with the current selection process where it is not selecting the correct dresses when it comes to color. It is selecting mostly random ones and missing the ones of the specified color. Please ensure that the selection process is updated to correctly prioritize items with the specified color in the title or tags.
 
 List of products: ${productDetails}
 
